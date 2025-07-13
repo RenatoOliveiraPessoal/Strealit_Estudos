@@ -1,5 +1,6 @@
 #Bibliotecas importadas
 
+
 import streamlit as st          #streamlit
 import pandas as pd             #pandas para trabalhar com dados e tabelas
 
