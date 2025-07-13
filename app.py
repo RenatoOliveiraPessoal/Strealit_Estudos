@@ -3,7 +3,7 @@
 
 import streamlit as st          #streamlit
 import pandas as pd             #pandas para trabalhar com dados e tabelas
-
+import numpy as np 
 import matplotlib.pyplot as plt #usada na hora de plotar grafico dizendo qual o tipo de gráfico eu quero.
 import altair as alt
 
