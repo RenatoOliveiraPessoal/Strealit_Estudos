@@ -154,32 +154,32 @@ elif st.session_state.pagina == "questionario":
     if "respostas" not in st.session_state:
         st.session_state.respostas = {}
 
-# Pergunta atual
-idx = st.session_state.indice_pergunta
-pergunta_atual = perguntas[idx]
+    # Pergunta atual
+    idx = st.session_state.indice_pergunta
+    pergunta_atual = perguntas[idx]
 
-# Mostra progresso
-st.write(f"Pergunta {idx + 1} de {len(perguntas)}")
+    # Mostra progresso
+    st.write(f"Pergunta {idx + 1} de {len(perguntas)}")
 
-# Seleção de resposta
-resposta = st.radio(pergunta_atual, opcoes, index=None, key=f"q_{idx}")
+    # Seleção de resposta
+    resposta = st.radio(pergunta_atual, opcoes, index=None, key=f"q_{idx}")
 
-# Botão Próxima
-if st.button("Próxima"):
-    if resposta is None:
-        st.warning("⚠️ Selecione uma opção antes de continuar.")
-    else:
-        st.session_state.respostas[pergunta_atual] = resposta
-        st.session_state.indice_pergunta += 1
+    # Botão Próxima
+    if st.button("Próxima"):
+        if resposta is None:
+            st.warning("⚠️ Selecione uma opção antes de continuar.")
+        else:
+            st.session_state.respostas[pergunta_atual] = resposta
+            st.session_state.indice_pergunta += 1
 
-# Mostra a próxima pergunta ou envia respostas
-if st.session_state.indice_pergunta >= len(perguntas):
-    linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
-    linha.extend([st.session_state.respostas[p] for p in perguntas])
-    sheet.append_row(linha)
-    st.success("✅ Respostas enviadas com sucesso!")
-    st.balloons()
-    st.session_state.pagina = "inicio"
-    st.session_state.indice_pergunta = 0
-    st.session_state.respostas = {}
-
+    # Mostra a próxima pergunta ou envia respostas
+    if st.session_state.indice_pergunta >= len(perguntas):
+        linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
+        linha.extend([st.session_state.respostas[p] for p in perguntas])
+        sheet.append_row(linha)
+        st.success("✅ Respostas enviadas com sucesso!")
+        st.balloons()
+        # Resetar questionário
+        st.session_state.pagina = "inicio"
+        st.session_state.indice_pergunta = 0
+        st.session_state.respostas = {}
