@@ -116,9 +116,11 @@ perguntas = [
 
 ]
 
+
+
 opcoes = ["Nunca", "Raramente", "Às vezes", "Sempre"]
 
-# === Controle de navegação ===
+# ===== Estado do app =====
 if "pagina" not in st.session_state:
     st.session_state.pagina = "inicio"
 if "setor" not in st.session_state:
@@ -128,15 +130,12 @@ if "indice_pergunta" not in st.session_state:
 if "respostas" not in st.session_state:
     st.session_state.respostas = {}
 
-# === Página inicial ===
+# ===== Página inicial =====
 if st.session_state.pagina == "inicio":
     st.title("📌 Projeto de regulamentação e avaliação as normas da NR-1")
+    setor = st.selectbox("Informe o seu setor:", 
+                         ["Selecione...", "Contabilidade", "Operações", "Financeiro", "RH", "Outro"])
     
-    setor = st.selectbox(
-        "Informe o seu setor:", 
-        ["Selecione...", "Contabilidade", "Operações", "Financeiro", "RH", "Outro"]
-    )
-
     if st.button("Prosseguir para o questionário"):
         if setor != "Selecione...":
             st.session_state.setor = setor
@@ -147,43 +146,37 @@ if st.session_state.pagina == "inicio":
         else:
             st.warning("⚠️ Selecione um setor antes de prosseguir.")
 
-# === Página do questionário ===
+# ===== Página do questionário =====
 elif st.session_state.pagina == "questionario":
     st.title("📋 Questionário de Percepções no Trabalho")
     st.write(f"Setor informado: **{st.session_state.setor}**")
-    
+
     idx = st.session_state.indice_pergunta
     pergunta_atual = perguntas[idx]
 
-    # Mostra progresso
     st.write(f"Pergunta {idx + 1} de {len(perguntas)}")
 
-    # Chave única para salvar resposta no session_state
     key = f"q_{idx}"
-    if key not in st.session_state:
-        st.session_state[key] = None
+    resposta = st.radio(pergunta_atual, opcoes, key=key)
 
-    # Seleção de resposta
-    st.session_state[key] = st.radio(pergunta_atual, opcoes, index=None, key=key)
-
-    # Botão próxima pergunta
     if st.button("Próxima"):
-        if st.session_state[key] is None:
+        if resposta is None:
             st.warning("⚠️ Selecione uma opção antes de continuar.")
         else:
-            # Salva a resposta
-            st.session_state.respostas[pergunta_atual] = st.session_state[key]
+            st.session_state.respostas[pergunta_atual] = resposta
             st.session_state.indice_pergunta += 1
-            st.rerun()
 
-    # Ao terminar todas as perguntas
-    if st.session_state.indice_pergunta >= len(perguntas):
-        linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
-        linha.extend([st.session_state.respostas[p] for p in perguntas])
-        sheet.append_row(linha)
-        st.success("✅ Respostas enviadas com sucesso!")
-        st.balloons()
-        # Resetar estado
-        st.session_state.pagina = "inicio"
-        st.session_state.indice_pergunta = 0
-        st.session_state.respostas = {}
+            if st.session_state.indice_pergunta < len(perguntas):
+                st.rerun()
+            else:
+                linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
+                linha.extend([st.session_state.respostas[p] for p in perguntas])
+                sheet.append_row(linha)
+
+                st.success("✅ Respostas enviadas com sucesso!")
+                st.balloons()
+
+                st.session_state.pagina = "inicio"
+                st.session_state.indice_pergunta = 0
+                st.session_state.respostas = {}
+                st.rerun()
