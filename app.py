@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import gspread
+import json
 from google.oauth2.service_account import Credentials
 
 # Escopos para Google Sheets/Drive
