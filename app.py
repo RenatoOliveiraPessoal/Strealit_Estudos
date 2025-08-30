@@ -1,25 +1,26 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
-# Escopos do Google Sheets
+# Escopos
 scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
 
-# Caminho para o arquivo JSON local
-caminho_json = "credenciais.json"  # ou "secrets/credenciais.json" se estiver numa subpasta
+# JSON do Service Account
+caminho_json = "credenciais.json"
+creds = Credentials.from_service_account_file(caminho_json, scopes=scope)
 
-# Autenticação
-creds = ServiceAccountCredentials.from_json_keyfile_name(caminho_json, scope)
+# Autorização gspread
 client = gspread.authorize(creds)
 
-
-# Abrindo a planilha pelo nome
+# Abrindo a planilha e a aba
 spreadsheet = client.open("Respostas NR1")
-
-# Acessando a aba "Página1"
 sheet = spreadsheet.worksheet("Página1")
+
+# Lendo os dados
+data = sheet.get_all_records()
+st.write(data)
 
 # === Perguntas ===
 perguntas = [
