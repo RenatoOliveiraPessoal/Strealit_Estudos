@@ -148,30 +148,43 @@ elif st.session_state.pagina == "questionario":
     st.title("📋 Questionário de Percepções no Trabalho")
     st.write(f"Setor informado: **{st.session_state.setor}**")
 
+    # Inicializa estado se necessário
     if "indice_pergunta" not in st.session_state:
         st.session_state.indice_pergunta = 0
     if "respostas" not in st.session_state:
         st.session_state.respostas = {}
 
-    pergunta_atual = perguntas[st.session_state.indice_pergunta]
-    resposta = st.radio(pergunta_atual, opcoes, index=None, key=pergunta_atual)
+    # Pergunta atual
+    idx = st.session_state.indice_pergunta
+    pergunta_atual = perguntas[idx]
 
+    # Mostra progresso
+    st.write(f"Pergunta {idx + 1} de {len(perguntas)}")
+
+    # Seleção de resposta
+    resposta = st.radio(pergunta_atual, opcoes, index=None, key=f"q_{idx}")
+
+    # Botão Próxima
     if st.button("Próxima"):
         if resposta is None:
             st.warning("⚠️ Selecione uma opção antes de continuar.")
         else:
+            # Salva resposta
             st.session_state.respostas[pergunta_atual] = resposta
-            if st.session_state.indice_pergunta + 1 < len(perguntas):
+
+            # Avança ou envia respostas
+            if idx + 1 < len(perguntas):
                 st.session_state.indice_pergunta += 1
-                st.experimental_rerun()
+                st.experimental_rerun()  # volta para exibir próxima pergunta
             else:
-                # Todas as perguntas respondidas, enviar para planilha
+                # Todas respondidas, envia para o Google Sheets
                 linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
                 linha.extend([st.session_state.respostas[p] for p in perguntas])
                 sheet.append_row(linha)
 
                 st.success("✅ Respostas enviadas com sucesso!")
                 st.balloons()
+
                 # Resetar questionário
                 st.session_state.pagina = "inicio"
                 st.session_state.indice_pergunta = 0
