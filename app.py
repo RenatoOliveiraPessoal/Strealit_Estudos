@@ -4,7 +4,7 @@ import gspread
 import json
 from google.oauth2.service_account import Credentials
 
-# Escopos para Google Sheets/Drive
+# === Configuração Google Sheets/Drive ===
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
@@ -14,16 +14,12 @@ scope = [
 creds_info = json.loads(st.secrets["gcp_service_account"]["json"])
 creds = Credentials.from_service_account_info(creds_info, scopes=scope)
 
-# Autorizando gspread
+# Autoriza gspread
 client = gspread.authorize(creds)
 
-# Abrindo planilha e aba
+# Abre planilha e aba
 spreadsheet = client.open("Respostas NR1")
 sheet = spreadsheet.worksheet("Página1")
-
-# Lendo dados e mostrando no app
-data = sheet.get_all_records()
-st.write(data)
 
 # === Perguntas ===
 perguntas = [
@@ -127,19 +123,27 @@ if "pagina" not in st.session_state:
     st.session_state.pagina = "inicio"
 if "setor" not in st.session_state:
     st.session_state.setor = None
+if "indice_pergunta" not in st.session_state:
+    st.session_state.indice_pergunta = 0
+if "respostas" not in st.session_state:
+    st.session_state.respostas = {}
 
 # === Página inicial ===
 if st.session_state.pagina == "inicio":
     st.title("📌 Projeto de regulamentação e avaliação as normas da NR-1")
-
-    setor = st.selectbox("Informe o seu setor:", 
-                         ["Selecione...", "Contabilidade", "Operações", "Financeiro", "RH", "Outro"])
+    
+    setor = st.selectbox(
+        "Informe o seu setor:", 
+        ["Selecione...", "Contabilidade", "Operações", "Financeiro", "RH", "Outro"]
+    )
 
     if st.button("Prosseguir para o questionário"):
         if setor != "Selecione...":
             st.session_state.setor = setor
             st.session_state.pagina = "questionario"
-            st.rerun()
+            st.session_state.indice_pergunta = 0
+            st.session_state.respostas = {}
+            st.experimental_rerun()
         else:
             st.warning("⚠️ Selecione um setor antes de prosseguir.")
 
@@ -147,39 +151,39 @@ if st.session_state.pagina == "inicio":
 elif st.session_state.pagina == "questionario":
     st.title("📋 Questionário de Percepções no Trabalho")
     st.write(f"Setor informado: **{st.session_state.setor}**")
-
-    # Inicializa estado se necessário
-    if "indice_pergunta" not in st.session_state:
-        st.session_state.indice_pergunta = 0
-    if "respostas" not in st.session_state:
-        st.session_state.respostas = {}
-
-    # Pergunta atual
+    
     idx = st.session_state.indice_pergunta
     pergunta_atual = perguntas[idx]
 
     # Mostra progresso
     st.write(f"Pergunta {idx + 1} de {len(perguntas)}")
 
-    # Seleção de resposta
-    resposta = st.radio(pergunta_atual, opcoes, index=None, key=f"q_{idx}")
+    # Chave única para salvar resposta no session_state
+    key = f"q_{idx}"
+    if key not in st.session_state:
+        st.session_state[key] = None
 
-    # Botão Próxima
+    # Seleção de resposta
+    st.session_state[key] = st.radio(pergunta_atual, opcoes, index=None, key=key)
+
+    # Botão próxima pergunta
     if st.button("Próxima"):
-        if resposta is None:
+        if st.session_state[key] is None:
             st.warning("⚠️ Selecione uma opção antes de continuar.")
         else:
-            st.session_state.respostas[pergunta_atual] = resposta
+            # Salva a resposta
+            st.session_state.respostas[pergunta_atual] = st.session_state[key]
             st.session_state.indice_pergunta += 1
+            st.experimental_rerun()
 
-    # Mostra a próxima pergunta ou envia respostas
+    # Ao terminar todas as perguntas
     if st.session_state.indice_pergunta >= len(perguntas):
         linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
         linha.extend([st.session_state.respostas[p] for p in perguntas])
         sheet.append_row(linha)
         st.success("✅ Respostas enviadas com sucesso!")
         st.balloons()
-        # Resetar questionário
+        # Resetar estado
         st.session_state.pagina = "inicio"
         st.session_state.indice_pergunta = 0
         st.session_state.respostas = {}
