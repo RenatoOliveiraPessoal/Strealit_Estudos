@@ -1,9 +1,17 @@
 import streamlit as st
 import pandas as pd
-import os
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# === Configuração do arquivo Excel ===
-ARQUIVO_EXCEL = r"C:\Users\renat\OneDrive\Repositorio VSC\Questionario NR-1\respostas.xlsx"
+# === Configuração do Google Sheets ===
+# Substitua "credenciais.json" pelo caminho do arquivo JSON da conta de serviço
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds_json = json.loads(st.secrets["gcp_service_account"]["json"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, scope)
+client = gspread.authorize(creds)
+
+# Abra a planilha pelo nome
+sheet = client.open("respostas").sheet1
 
 # === Perguntas ===
 perguntas = [
@@ -136,18 +144,12 @@ elif st.session_state.pagina == "questionario":
             st.warning("⚠️ Responda todas as perguntas antes de enviar.")
         else:
             # Adiciona setor e timestamp
-            df_resposta = pd.DataFrame([respostas])
-            df_resposta["Setor"] = st.session_state.setor
-            df_resposta["Respondido_em"] = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+            linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
+            # Acrescenta todas as respostas na mesma ordem
+            linha.extend([respostas[p] for p in perguntas])
 
-            # Salva no Excel
-            if os.path.exists(ARQUIVO_EXCEL):
-                df_existente = pd.read_excel(ARQUIVO_EXCEL)
-                df_final = pd.concat([df_existente, df_resposta], ignore_index=True)
-            else:
-                df_final = df_resposta
-
-            df_final.to_excel(ARQUIVO_EXCEL, index=False)
+            # Envia para o Google Sheets
+            sheet.append_row(linha)
 
             st.success("✅ Respostas enviadas com sucesso!")
             st.balloons()
