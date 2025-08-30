@@ -183,9 +183,3 @@ if st.session_state.indice_pergunta >= len(perguntas):
     st.session_state.indice_pergunta = 0
     st.session_state.respostas = {}
 
-
-                # Resetar questionário
-                st.session_state.pagina = "inicio"
-                st.session_state.indice_pergunta = 0
-                st.session_state.respostas = {}
-                st.experimental_rerun()
