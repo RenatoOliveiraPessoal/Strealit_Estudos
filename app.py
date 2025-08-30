@@ -143,7 +143,7 @@ if st.session_state.pagina == "inicio":
             st.session_state.pagina = "questionario"
             st.session_state.indice_pergunta = 0
             st.session_state.respostas = {}
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.warning("⚠️ Selecione um setor antes de prosseguir.")
 
@@ -174,7 +174,7 @@ elif st.session_state.pagina == "questionario":
             # Salva a resposta
             st.session_state.respostas[pergunta_atual] = st.session_state[key]
             st.session_state.indice_pergunta += 1
-            st.experimental_rerun()
+            st.rerun()
 
     # Ao terminar todas as perguntas
     if st.session_state.indice_pergunta >= len(perguntas):
