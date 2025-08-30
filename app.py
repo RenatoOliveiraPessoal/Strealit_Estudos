@@ -3,15 +3,23 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# === Configuração do Google Sheets ===
-# Substitua "credenciais.json" pelo caminho do arquivo JSON da conta de serviço
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds_json = json.loads(st.secrets["gcp_service_account"]["json"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, scope)
+# Escopos do Google Sheets
+scope = ["https://spreadsheets.google.com/feeds",
+         "https://www.googleapis.com/auth/drive"]
+
+# Caminho para o arquivo JSON local
+caminho_json = "credenciais.json"  # ou "secrets/credenciais.json" se estiver numa subpasta
+
+# Autenticação
+creds = ServiceAccountCredentials.from_json_keyfile_name(caminho_json, scope)
 client = gspread.authorize(creds)
 
-# Abra a planilha pelo nome
-sheet = client.open("respostas").sheet1
+
+# Abrindo a planilha pelo nome
+spreadsheet = client.open("Respostas NR1")
+
+# Acessando a aba "Página1"
+sheet = spreadsheet.worksheet("Página1")
 
 # === Perguntas ===
 perguntas = [
@@ -21,7 +29,7 @@ perguntas = [
     "Você já percebeu atitudes de intimidação ou constrangimento contra você?",
     "Já sentiu que sua opinião foi ridicularizada ou desvalorizada intencionalmente?",
     "Você já foi alvo de tratamento discriminatório (por qualquer motivo) em seu ambiente de trabalho?",
-
+    
     # Grupo 2 - Clareza e orientações
     "Você já ficou sem saber claramente o que era esperado do seu trabalho?",
     "Já recebeu tarefas sem orientação suficiente sobre como realizá-las?",
@@ -105,6 +113,7 @@ perguntas = [
     "Você já se sentiu desconectado das pessoas com quem trabalha?",
     "Já teve a impressão de que a falta de contato presencial reduzia sua motivação?",
     "Você já achou difícil, em algum momento, manter vínculos sociais por conta do distanciamento?"
+
 ]
 
 opcoes = ["Nunca", "Raramente", "Às vezes", "Sempre"]
