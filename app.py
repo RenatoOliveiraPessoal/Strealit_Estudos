@@ -148,22 +148,32 @@ elif st.session_state.pagina == "questionario":
     st.title("📋 Questionário de Percepções no Trabalho")
     st.write(f"Setor informado: **{st.session_state.setor}**")
 
-    respostas = {}
-    for pergunta in perguntas:
-        respostas[pergunta] = st.radio(pergunta, opcoes, index=None, key=pergunta)
+    if "indice_pergunta" not in st.session_state:
+        st.session_state.indice_pergunta = 0
+    if "respostas" not in st.session_state:
+        st.session_state.respostas = {}
 
-    if st.button("Enviar Respostas"):
-        if None in respostas.values():
-            st.warning("⚠️ Responda todas as perguntas antes de enviar.")
+    pergunta_atual = perguntas[st.session_state.indice_pergunta]
+    resposta = st.radio(pergunta_atual, opcoes, index=None, key=pergunta_atual)
+
+    if st.button("Próxima"):
+        if resposta is None:
+            st.warning("⚠️ Selecione uma opção antes de continuar.")
         else:
-            # Adiciona setor e timestamp
-            linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
-            # Acrescenta todas as respostas na mesma ordem
-            linha.extend([respostas[p] for p in perguntas])
+            st.session_state.respostas[pergunta_atual] = resposta
+            if st.session_state.indice_pergunta + 1 < len(perguntas):
+                st.session_state.indice_pergunta += 1
+                st.experimental_rerun()
+            else:
+                # Todas as perguntas respondidas, enviar para planilha
+                linha = [st.session_state.setor, pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")]
+                linha.extend([st.session_state.respostas[p] for p in perguntas])
+                sheet.append_row(linha)
 
-            # Envia para o Google Sheets
-            sheet.append_row(linha)
-
-            st.success("✅ Respostas enviadas com sucesso!")
-            st.balloons()
-            st.session_state.pagina = "inicio"
+                st.success("✅ Respostas enviadas com sucesso!")
+                st.balloons()
+                # Resetar questionário
+                st.session_state.pagina = "inicio"
+                st.session_state.indice_pergunta = 0
+                st.session_state.respostas = {}
+                st.experimental_rerun()
